@@ -38,6 +38,10 @@ class AP_AHRS
 public:
     // Constructor
     AP_AHRS(AP_InertialSensor &ins, GPS *&gps) :
+<<<<<<< HEAD
+=======
+        _compass(NULL),
+>>>>>>> upstream/master
         _ins(ins),
         _gps(gps)
     {
@@ -74,7 +78,10 @@ public:
         set_orientation();
     }
 
-
+    const Compass* get_compass() const {
+        return _compass;
+    }
+        
     // allow for runtime change of orientation
     // this makes initial config easier
     void set_orientation() {
@@ -88,6 +95,13 @@ public:
         _airspeed = airspeed;
     }
 
+<<<<<<< HEAD
+=======
+    const GPS *get_gps() const {
+        return _gps;
+    }
+
+>>>>>>> upstream/master
     const AP_InertialSensor &get_ins() const {
 	    return _ins;
     }
@@ -116,6 +130,9 @@ public:
 
     // reset the current attitude, used on new IMU calibration
     virtual void reset(bool recover_eulers=false) = 0;
+
+    // reset the current attitude, used on new IMU calibration
+    virtual void reset_attitude(const float &roll, const float &pitch, const float &yaw) = 0;
 
     // how often our attitude representation has gone out of range
     uint8_t renorm_range_count;

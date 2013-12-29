@@ -29,6 +29,7 @@ static void init_rc_in()
     g.rc_1.set_type(RC_CHANNEL_TYPE_ANGLE_RAW);
     g.rc_2.set_type(RC_CHANNEL_TYPE_ANGLE_RAW);
     g.rc_4.set_type(RC_CHANNEL_TYPE_ANGLE_RAW);
+<<<<<<< HEAD:ArduCopter/radio.ino
 #if FRAME_CONFIG == SINGLE_FRAME
     // we set four servos to angle
     g.single_servo_1.set_type(RC_CHANNEL_TYPE_ANGLE);
@@ -39,6 +40,18 @@ static void init_rc_in()
     g.single_servo_2.set_angle(DEFAULT_ANGLE_MAX);
     g.single_servo_3.set_angle(DEFAULT_ANGLE_MAX);
     g.single_servo_4.set_angle(DEFAULT_ANGLE_MAX);
+=======
+#if FRAME_CONFIG == SINGLE_FRAME
+    // we set four servos to angle
+    g.single_servo_1.set_type(RC_CHANNEL_TYPE_ANGLE);
+    g.single_servo_2.set_type(RC_CHANNEL_TYPE_ANGLE);
+    g.single_servo_3.set_type(RC_CHANNEL_TYPE_ANGLE);
+    g.single_servo_4.set_type(RC_CHANNEL_TYPE_ANGLE);
+    g.single_servo_1.set_angle(DEFAULT_ANGLE_MAX);
+    g.single_servo_2.set_angle(DEFAULT_ANGLE_MAX);
+    g.single_servo_3.set_angle(DEFAULT_ANGLE_MAX);
+    g.single_servo_4.set_angle(DEFAULT_ANGLE_MAX);
+>>>>>>> upstream/master:ArduCopter/radio.pde
 #endif
 
     //set auxiliary servo ranges

@@ -119,8 +119,19 @@ static void read_battery(void)
 // RC_CHANNELS_SCALED message
 void read_receiver_rssi(void)
 {
+<<<<<<< HEAD:ArduCopter/sensors.ino
     rssi_analog_source->set_pin(g.rssi_pin);
     float ret = rssi_analog_source->voltage_average() * 50;
     ret=(ret*5)/3.4;			//SZASZ 
     receiver_rssi = constrain_int16(ret, 0, 255);
+=======
+    // avoid divide by zero
+    if (g.rssi_range <= 0) {
+        receiver_rssi = 0;
+    }else{
+        rssi_analog_source->set_pin(g.rssi_pin);
+        float ret = rssi_analog_source->voltage_average() * 255 / g.rssi_range;
+        receiver_rssi = constrain_int16(ret, 0, 255);
+    }
+>>>>>>> upstream/master:ArduCopter/sensors.pde
 }

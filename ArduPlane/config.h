@@ -164,8 +164,11 @@
 #ifndef SERIAL0_BAUD
  # define SERIAL0_BAUD                   115200
 #endif
-#ifndef SERIAL3_BAUD
- # define SERIAL3_BAUD                    57600
+#ifndef SERIAL1_BAUD
+ # define SERIAL1_BAUD                    57600
+#endif
+#ifndef SERIAL2_BAUD
+ # define SERIAL2_BAUD                    57600
 #endif
 
 
@@ -257,8 +260,6 @@
 // THROTTLE_FS_VALUE
 // SHORT_FAILSAFE_ACTION
 // LONG_FAILSAFE_ACTION
-// GCS_HEARTBEAT_FAILSAFE
-//
 #ifndef THROTTLE_FAILSAFE
  # define THROTTLE_FAILSAFE              ENABLED
 #endif
@@ -271,10 +272,6 @@
 #ifndef LONG_FAILSAFE_ACTION
  # define LONG_FAILSAFE_ACTION           0
 #endif
-#ifndef GCS_HEARTBEAT_FAILSAFE
- # define GCS_HEARTBEAT_FAILSAFE         DISABLED
-#endif
-
 
 //////////////////////////////////////////////////////////////////////////////
 // AUTO_TRIM
@@ -451,7 +448,8 @@
     MASK_LOG_COMPASS | \
     MASK_LOG_CURRENT | \
     MASK_LOG_TECS | \
-    MASK_LOG_CAMERA
+    MASK_LOG_CAMERA | \
+    MASK_LOG_RC
 
 
 
@@ -523,6 +521,10 @@
 
 #ifndef SERIAL_BUFSIZE
  # define SERIAL_BUFSIZE 512
+#endif
+
+#ifndef SERIAL1_BUFSIZE
+ # define SERIAL1_BUFSIZE 256
 #endif
 
 #ifndef SERIAL2_BUFSIZE

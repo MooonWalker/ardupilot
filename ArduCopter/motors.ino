@@ -141,13 +141,10 @@ static void init_arm_motors()
     // mid-flight, so set the serial ports non-blocking once we arm
     // the motors
     hal.uartA->set_blocking_writes(false);
-    if (gcs3.initialised) {
-        hal.uartC->set_blocking_writes(false);
+    hal.uartC->set_blocking_writes(false);
+    if (hal.uartD != NULL) {
+        hal.uartD->set_blocking_writes(false);
     }
-
-#if COPTER_LEDS == ENABLED
-    piezo_beep_twice();
-#endif
 
     // Remember Orientation
     // --------------------
@@ -187,10 +184,6 @@ static void init_arm_motors()
     // set hover throttle
     motors.set_mid_throttle(g.throttle_mid);
 
-#if COPTER_LEDS == ENABLED
-    piezo_beep_twice();
-#endif
-
     // Cancel arming if throttle is raised too high so that copter does not suddenly take off
     read_radio();
     if (g.rc_3.control_in > g.throttle_cruise && g.throttle_cruise > 100) {
@@ -226,7 +219,11 @@ static void pre_arm_checks(bool display_failure)
     }
 
     // succeed if pre arm checks are disabled
+<<<<<<< HEAD:ArduCopter/motors.ino
     if(g.arming_check_enabled == ARMING_CHECK_NONE) {
+=======
+    if(g.arming_check == ARMING_CHECK_NONE) {
+>>>>>>> upstream/master:ArduCopter/motors.pde
         set_pre_arm_check(true);
         set_pre_arm_rc_check(true);
         return;
@@ -242,7 +239,11 @@ static void pre_arm_checks(bool display_failure)
     }
 
     // check Baro
+<<<<<<< HEAD:ArduCopter/motors.ino
     if ((g.arming_check_enabled == ARMING_CHECK_ALL) || (g.arming_check_enabled & ARMING_CHECK_BARO)) {
+=======
+    if ((g.arming_check == ARMING_CHECK_ALL) || (g.arming_check & ARMING_CHECK_BARO)) {
+>>>>>>> upstream/master:ArduCopter/motors.pde
         // barometer health check
         if(!barometer.healthy) {
             if (display_failure) {
@@ -253,9 +254,15 @@ static void pre_arm_checks(bool display_failure)
     }
 
     // check Compass
+<<<<<<< HEAD:ArduCopter/motors.ino
     if ((g.arming_check_enabled == ARMING_CHECK_ALL) || (g.arming_check_enabled & ARMING_CHECK_COMPASS)) {
         // check the compass is healthy
         if(!compass.healthy) {
+=======
+    if ((g.arming_check == ARMING_CHECK_ALL) || (g.arming_check & ARMING_CHECK_COMPASS)) {
+        // check the compass is healthy
+        if(!compass.healthy()) {
+>>>>>>> upstream/master:ArduCopter/motors.pde
             if (display_failure) {
                 gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Compass not healthy"));
             }
@@ -280,7 +287,11 @@ static void pre_arm_checks(bool display_failure)
         }
 
         // check for unreasonable mag field length
+<<<<<<< HEAD:ArduCopter/motors.ino
         float mag_field = pythagorous3(compass.mag_x, compass.mag_y, compass.mag_z);
+=======
+        float mag_field = compass.get_field().length();
+>>>>>>> upstream/master:ArduCopter/motors.pde
         if (mag_field > COMPASS_MAGFIELD_EXPECTED*1.65 || mag_field < COMPASS_MAGFIELD_EXPECTED*0.35) {
             if (display_failure) {
                 gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Check mag field"));
@@ -290,7 +301,11 @@ static void pre_arm_checks(bool display_failure)
     }
 
     // check GPS
+<<<<<<< HEAD:ArduCopter/motors.ino
     if ((g.arming_check_enabled == ARMING_CHECK_ALL) || (g.arming_check_enabled & ARMING_CHECK_GPS)) {
+=======
+    if ((g.arming_check == ARMING_CHECK_ALL) || (g.arming_check & ARMING_CHECK_GPS)) {
+>>>>>>> upstream/master:ArduCopter/motors.pde
         // check gps is ok if required - note this same check is repeated again in arm_checks
         if ((mode_requires_GPS(control_mode) || g.failsafe_gps_enabled == FS_GPS_LAND_EVEN_STABILIZE) && !pre_arm_gps_checks(display_failure)) {
             return;
@@ -305,7 +320,11 @@ static void pre_arm_checks(bool display_failure)
     }
 
     // check INS
+<<<<<<< HEAD:ArduCopter/motors.ino
     if ((g.arming_check_enabled == ARMING_CHECK_ALL) || (g.arming_check_enabled & ARMING_CHECK_INS)) {
+=======
+    if ((g.arming_check == ARMING_CHECK_ALL) || (g.arming_check & ARMING_CHECK_INS)) {
+>>>>>>> upstream/master:ArduCopter/motors.pde
         // check accelerometers have been calibrated
         if(!ins.calibrated()) {
             if (display_failure) {
@@ -325,7 +344,11 @@ static void pre_arm_checks(bool display_failure)
 
 #ifndef CONFIG_ARCH_BOARD_PX4FMU_V1
     // check board voltage
+<<<<<<< HEAD:ArduCopter/motors.ino
     if ((g.arming_check_enabled == ARMING_CHECK_ALL) || (g.arming_check_enabled & ARMING_CHECK_VOLTAGE)) {
+=======
+    if ((g.arming_check == ARMING_CHECK_ALL) || (g.arming_check & ARMING_CHECK_VOLTAGE)) {
+>>>>>>> upstream/master:ArduCopter/motors.pde
         if(board_voltage() < BOARD_VOLTAGE_MIN || board_voltage() > BOARD_VOLTAGE_MAX) {
             if (display_failure) {
                 gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Check Board Voltage"));
@@ -336,7 +359,11 @@ static void pre_arm_checks(bool display_failure)
 #endif
 
     // check various parameter values
+<<<<<<< HEAD:ArduCopter/motors.ino
     if ((g.arming_check_enabled == ARMING_CHECK_ALL) || (g.arming_check_enabled & ARMING_CHECK_PARAMETERS)) {
+=======
+    if ((g.arming_check == ARMING_CHECK_ALL) || (g.arming_check & ARMING_CHECK_PARAMETERS)) {
+>>>>>>> upstream/master:ArduCopter/motors.pde
 
         // ensure ch7 and ch8 have different functions
         if ((g.ch7_option != 0 || g.ch8_option != 0) && g.ch7_option == g.ch8_option) {
@@ -387,7 +414,11 @@ static void pre_arm_rc_checks()
     }
 
     // set rc-checks to success if RC checks are disabled
+<<<<<<< HEAD:ArduCopter/motors.ino
     if ((g.arming_check_enabled != ARMING_CHECK_ALL) && !(g.arming_check_enabled & ARMING_CHECK_RC)) {
+=======
+    if ((g.arming_check != ARMING_CHECK_ALL) && !(g.arming_check & ARMING_CHECK_RC)) {
+>>>>>>> upstream/master:ArduCopter/motors.pde
         set_pre_arm_rc_check(true);
         return;
     }
@@ -417,10 +448,25 @@ static bool pre_arm_gps_checks(bool display_failure)
     float speed_cms = inertial_nav.get_velocity().length();     // speed according to inertial nav in cm/s
 
     // ensure GPS is ok and our speed is below 50cm/s
+<<<<<<< HEAD:ArduCopter/motors.ino
     if (!GPS_ok() || g_gps->hdop > g.gps_hdop_good || gps_glitch.glitching() || speed_cms == 0 || speed_cms > PREARM_MAX_VELOCITY_CMS) {
         if (display_failure) {
             gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Bad GPS Pos"));
         }
+=======
+    if (!GPS_ok() || gps_glitch.glitching() || speed_cms == 0 || speed_cms > PREARM_MAX_VELOCITY_CMS) {
+        if (display_failure) {
+            gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: Bad GPS Pos"));
+        }
+        return false;
+    }
+
+    // warn about hdop separately - to prevent user confusion with no gps lock
+    if (g_gps->hdop > g.gps_hdop_good) {
+        if (display_failure) {
+            gcs_send_text_P(SEVERITY_HIGH,PSTR("PreArm: High GPS HDOP"));
+        }
+>>>>>>> upstream/master:ArduCopter/motors.pde
         return false;
     }
 
@@ -433,19 +479,31 @@ static bool pre_arm_gps_checks(bool display_failure)
 static bool arm_checks(bool display_failure)
 {
     // succeed if arming checks are disabled
+<<<<<<< HEAD:ArduCopter/motors.ino
     if (g.arming_check_enabled == ARMING_CHECK_NONE) {
+=======
+    if (g.arming_check == ARMING_CHECK_NONE) {
+>>>>>>> upstream/master:ArduCopter/motors.pde
         return true;
     }
 
     // check gps is ok if required - note this same check is also done in pre-arm checks
+<<<<<<< HEAD:ArduCopter/motors.ino
     if ((g.arming_check_enabled == ARMING_CHECK_ALL) || (g.arming_check_enabled & ARMING_CHECK_GPS)) {
+=======
+    if ((g.arming_check == ARMING_CHECK_ALL) || (g.arming_check & ARMING_CHECK_GPS)) {
+>>>>>>> upstream/master:ArduCopter/motors.pde
         if ((mode_requires_GPS(control_mode) || g.failsafe_gps_enabled == FS_GPS_LAND_EVEN_STABILIZE) && !pre_arm_gps_checks(display_failure)) {
             return false;
         }
     }
 
     // check parameters
+<<<<<<< HEAD:ArduCopter/motors.ino
     if ((g.arming_check_enabled == ARMING_CHECK_ALL) || (g.arming_check_enabled & ARMING_CHECK_PARAMETERS)) {
+=======
+    if ((g.arming_check == ARMING_CHECK_ALL) || (g.arming_check & ARMING_CHECK_PARAMETERS)) {
+>>>>>>> upstream/master:ArduCopter/motors.pde
         // check throttle is above failsafe throttle
         if (g.failsafe_throttle != FS_THR_DISABLED && g.rc_3.radio_in < g.failsafe_throttle_value) {
             if (display_failure) {
@@ -495,11 +553,7 @@ static void init_disarm_motors()
 
     // we are not in the air
     set_takeoff_complete(false);
-
-#if COPTER_LEDS == ENABLED
-    piezo_beep();
-#endif
-
+    
     // setup fast AHRS gains to get right attitude
     ahrs.set_fast_gains(true);
 

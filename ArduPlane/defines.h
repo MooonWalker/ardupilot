@@ -26,6 +26,16 @@ enum failsafe_state {
 };
 
 
+// GCS failsafe types for FS_GCS_ENABL parameter
+enum gcs_failsafe {
+    GCS_FAILSAFE_OFF        = 0, // no GCS failsafe
+    GCS_FAILSAFE_HEARTBEAT  = 1, // failsafe if we stop receiving heartbeat
+    GCS_FAILSAFE_HB_RSSI    = 2  // failsafe if we stop receiving
+                                 // heartbeat or if RADIO.remrssi
+                                 // drops to 0
+};
+
+
 // active altitude sensor
 // ----------------------
 #define SONAR 0
@@ -110,6 +120,7 @@ enum ChannelMixing {
 #define RELAY_TOGGLE 5
 #define STOP_REPEAT 10
 
+<<<<<<< HEAD
 //  GCS Message ID's
 /// NOTE: to ensure we never block on sending MAVLink messages
 /// please keep each MSG_ to a single MAVLink message. If need be
@@ -142,6 +153,8 @@ enum ap_message {
     MSG_WIND,
     MSG_RETRY_DEFERRED // this must be last
 };
+=======
+>>>>>>> upstream/master
 
 // Logging message types. NOTE: If you change the value of one
 // of these then existing logs will break! Only add at the end, and 
@@ -161,6 +174,10 @@ enum log_messages {
     LOG_MODE_MSG,
     LOG_COMPASS_MSG,
     LOG_TECS_MSG,
+    LOG_RC_MSG,
+    LOG_SONAR_MSG,
+    LOG_COMPASS2_MSG,
+    LOG_ARM_DISARM_MSG,
     MAX_NUM_LOGS // always at the end
 };
 
@@ -177,6 +194,9 @@ enum log_messages {
 #define MASK_LOG_COMPASS                (1<<10)
 #define MASK_LOG_TECS                   (1<<11)
 #define MASK_LOG_CAMERA                 (1<<12)
+#define MASK_LOG_RC                     (1<<13)
+#define MASK_LOG_SONAR                  (1<<14)
+#define MASK_LOG_ARM_DISARM             (1<<15)
 
 // Waypoint Modes
 // ----------------

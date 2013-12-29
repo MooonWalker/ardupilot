@@ -17,6 +17,16 @@ public:
      */
     void set_system_clock(uint64_t time_utc_usec);
 
+<<<<<<< HEAD
+=======
+    /*
+      get system identifier (STM32 serial number)
+     */
+    bool get_system_id(char buf[40]);
+
+    uint16_t available_memory(void);
+
+>>>>>>> upstream/master
 private:
     int _safety_handle;
 };

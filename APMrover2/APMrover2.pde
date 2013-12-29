@@ -1,6 +1,6 @@
 /// -*- tab-width: 4; Mode: C++; c-basic-offset: 4; indent-tabs-mode: nil -*-
 
-#define THISFIRMWARE "ArduRover v2.43"
+#define THISFIRMWARE "ArduRover v2.44beta1"
 /*
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -84,7 +84,6 @@
 #include <GCS_MAVLink.h>    // MAVLink GCS definitions
 #include <AP_Airspeed.h>    // needed for AHRS build
 #include <AP_Vehicle.h>     // needed for AHRS build
-#include <memcheck.h>
 #include <DataFlash.h>
 #include <AP_RCMapper.h>        // RC input mapping library
 #include <SITL.h>
@@ -163,8 +162,8 @@ static DataFlash_APM1 DataFlash;
 #elif CONFIG_HAL_BOARD == HAL_BOARD_APM2
 static DataFlash_APM2 DataFlash;
 #elif CONFIG_HAL_BOARD == HAL_BOARD_AVR_SITL
-//static DataFlash_File DataFlash("/tmp/APMlogs");
-static DataFlash_SITL DataFlash;
+static DataFlash_File DataFlash("logs");
+//static DataFlash_SITL DataFlash;
 #elif CONFIG_HAL_BOARD == HAL_BOARD_PX4
 static DataFlash_File DataFlash("/fs/microsd/APM/logs");
 #elif CONFIG_HAL_BOARD == HAL_BOARD_LINUX
@@ -270,8 +269,8 @@ SITL sitl;
 // GCS selection
 ////////////////////////////////////////////////////////////////////////////////
 //
-GCS_MAVLINK	gcs0;
-GCS_MAVLINK	gcs3;
+static const uint8_t num_gcs = MAVLINK_COMM_NUM_BUFFERS;
+static GCS_MAVLINK gcs[MAVLINK_COMM_NUM_BUFFERS];
 
 // a pin for reading the receiver RSSI voltage. The scaling by 0.25 
 // is to take the 0 to 1024 range down to an 8 bit range for MAVLink
@@ -354,9 +353,10 @@ static struct {
     uint32_t rc_override_timer;
     uint32_t start_time;
     uint8_t triggered;
+    uint32_t last_valid_rc_ms;
 } failsafe;
 
-// notify object
+// notification object for LEDs, buzzers etc (parameter set to false disables external leds)
 static AP_Notify notify;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -581,7 +581,6 @@ static const AP_Scheduler::Task scheduler_tasks[] PROGMEM = {
   setup is called when the sketch starts
  */
 void setup() {
-	memcheck_init();
     cliSerial = hal.console;
 
     // load the default values of variables listed in var_info[]
@@ -592,7 +591,7 @@ void setup() {
     AP_Notify::flags.pre_arm_check = true;
     AP_Notify::flags.failsafe_battery = false;
 
-    notify.init();
+    notify.init(false);
 
     battery.init();
 
@@ -717,6 +716,12 @@ static void update_logging(void)
 
     if (g.log_bitmask & MASK_LOG_NTUN)
         Log_Write_Nav_Tuning();
+
+    if (g.log_bitmask & MASK_LOG_STEERING) {
+        if (control_mode == STEERING || control_mode == AUTO || control_mode == RTL || control_mode == GUIDED) {
+            Log_Write_Steering();
+        }
+    }
 }
 
 
@@ -845,6 +850,7 @@ static void update_current_mode(void)
     case AUTO:
     case RTL:
     case GUIDED:
+        set_reverse(false);
         calc_lateral_acceleration();
         calc_nav_steer();
         calc_throttle(g.speed_cruise);
@@ -869,7 +875,11 @@ static void update_current_mode(void)
         // and throttle gives speed in proportion to cruise speed, up
         // to 50% throttle, then uses nudging above that.
         float target_speed = channel_throttle->pwm_to_angle() * 0.01 * 2 * g.speed_cruise;
+<<<<<<< HEAD
         in_reverse = (target_speed < 0);
+=======
+        set_reverse(target_speed < 0);
+>>>>>>> upstream/master
         if (in_reverse) {
             target_speed = constrain_float(target_speed, -g.speed_cruise, 0);
         } else {
@@ -892,13 +902,18 @@ static void update_current_mode(void)
 
         // mark us as in_reverse when using a negative throttle to
         // stop AHRS getting off
+<<<<<<< HEAD
         in_reverse = (channel_throttle->servo_out < 0);
+=======
+        set_reverse(channel_throttle->servo_out < 0);
+>>>>>>> upstream/master
         break;
 
     case HOLD:
         // hold position - stop motors and center steering
         channel_throttle->servo_out = 0;
         channel_steer->servo_out = 0;
+        set_reverse(false);
         break;
 
     case INITIALISING:

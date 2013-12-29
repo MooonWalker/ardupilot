@@ -42,7 +42,11 @@ public:
     // enable - starts allowing signals to be sent to motors
     virtual void        enable();
 
+<<<<<<< HEAD
     // motor test
+=======
+    // output_test - spin each motor for a moment to allow the user to confirm the motor order and spin direction
+>>>>>>> upstream/master
     virtual void        output_test();
 
     // output_min - sends minimum values out to the motors

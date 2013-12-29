@@ -82,6 +82,7 @@ enum mode {
 
 #define MAV_CMD_CONDITION_YAW 23
 
+<<<<<<< HEAD
 //  GCS Message ID's
 /// NOTE: to ensure we never block on sending MAVLink messages
 /// please keep each MSG_ to a single MAVLink message. If need be
@@ -113,6 +114,8 @@ enum ap_message {
     MSG_RETRY_DEFERRED // this must be last
 };
 
+=======
+>>>>>>> upstream/master
 //  Logging parameters
 #define LOG_CTUN_MSG	        0x01
 #define LOG_NTUN_MSG    		0x02
@@ -125,6 +128,8 @@ enum ap_message {
 #define LOG_MODE_MSG            0x09
 #define LOG_COMPASS_MSG         0x0A
 #define LOG_CAMERA_MSG          0x0B
+#define LOG_COMPASS2_MSG        0x0C
+#define LOG_STEERING_MSG        0x0D
 
 #define TYPE_AIRSTART_MSG		0x00
 #define TYPE_GROUNDSTART_MSG	0x01
@@ -143,6 +148,7 @@ enum ap_message {
 #define MASK_LOG_SONAR   		(1<<10)
 #define MASK_LOG_COMPASS   		(1<<11)
 #define MASK_LOG_CAMERA   		(1<<12)
+#define MASK_LOG_STEERING  		(1<<13)
 
 // Waypoint Modes
 // ----------------

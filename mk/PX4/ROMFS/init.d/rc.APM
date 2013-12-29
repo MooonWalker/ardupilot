@@ -261,8 +261,8 @@ else
 fi
 
 echo Starting ArduPilot
-echo Starting ArduPilot $deviceA $deviceC >> $logfile
-if ArduPilot -d $deviceA -d2 $deviceC start
+echo Starting ArduPilot $deviceA $deviceC $deviceD >> $logfile
+if ArduPilot -d $deviceA -d2 $deviceC -d3 $deviceD start
 then
     echo ArduPilot started OK
 else

@@ -117,6 +117,12 @@ AP_AHRS_DCM::reset(bool recover_eulers)
     }
 }
 
+// reset the current attitude, used by HIL
+void AP_AHRS_DCM::reset_attitude(const float &_roll, const float &_pitch, const float &_yaw)
+{
+    _dcm_matrix.from_euler(_roll, _pitch, _yaw);    
+}
+
 /*
  *  check the DCM matrix for pathological values
  */
@@ -238,7 +244,7 @@ AP_AHRS_DCM::normalize(void)
 float
 AP_AHRS_DCM::yaw_error_compass(void)
 {
-    Vector3f mag = Vector3f(_compass->mag_x, _compass->mag_y, _compass->mag_z);
+    const Vector3f &mag = _compass->get_field();
     // get the mag vector in the earth frame
     Vector2f rb = _dcm_matrix.mulXY(mag);
 
@@ -438,6 +444,7 @@ Vector3f AP_AHRS_DCM::ra_delayed(const Vector3f &ra)
 {
     if (_ra_delay_length != _gps_delay.get()) {
         // the AHRS_GPS_DELAY setting has changed
+<<<<<<< HEAD
 
         // constrain it between 0 and 5
         if (_gps_delay.get() > 5) {
@@ -473,6 +480,43 @@ Vector3f AP_AHRS_DCM::ra_delayed(const Vector3f &ra)
     Vector3f ret = _ra_delay_buffer[_ra_delay_next];
     _ra_delay_buffer[_ra_delay_next] = ra;
 
+=======
+
+        // constrain it between 0 and 5
+        if (_gps_delay.get() > 5) {
+            _gps_delay.set(5);
+        }
+        if (_gps_delay.get() < 0) {
+            _gps_delay.set(0);
+        }
+        if (_ra_delay_buffer != NULL) {
+            delete[] _ra_delay_buffer;
+            _ra_delay_buffer = NULL;
+        }
+
+        // allocate the new buffer
+        _ra_delay_length = _gps_delay.get();
+        if (_ra_delay_length != 0) {
+            _ra_delay_buffer = new Vector3f[_ra_delay_length];
+        }
+        _ra_delay_next = 0;
+        if (_ra_delay_buffer != NULL) {
+            // on size change prefill the buffer with the current value
+            for (uint8_t i=0; i<_ra_delay_length; i++) {
+                _ra_delay_buffer[i] = ra;
+            }
+        }
+    }
+    if (_ra_delay_buffer == NULL) {
+        // we're not doing any delay
+        return ra;
+    }
+
+    // get the old element, and then fill it with the new element
+    Vector3f ret = _ra_delay_buffer[_ra_delay_next];
+    _ra_delay_buffer[_ra_delay_next] = ra;
+
+>>>>>>> upstream/master
     // move to the next element
     _ra_delay_next++;
     if (_ra_delay_next == _ra_delay_length) {

@@ -199,7 +199,10 @@ void AP_MotorsSingle::output_armed()
         }
 
         // ensure motors don't drop below a minimum value and stop
+<<<<<<< HEAD
         
+=======
+>>>>>>> upstream/master
         motor_out[AP_MOTORS_MOT_7] = max(motor_out[AP_MOTORS_MOT_7],    out_min);
     }
 
@@ -215,21 +218,29 @@ void AP_MotorsSingle::output_armed()
 // output_disarmed - sends commands to the motors
 void AP_MotorsSingle::output_disarmed()
 {
+<<<<<<< HEAD
     // fill the motor_out[] array for HIL use
     for (unsigned char i = AP_MOTORS_MOT_1; i < AP_MOTORS_MOT_4; i++) {
         motor_out[i] = _rc_throttle->radio_min;
     }
 
+=======
+>>>>>>> upstream/master
     // Send minimum values to all motors
     output_min();
 }
 
+<<<<<<< HEAD
 // output_disarmed - sends commands to the motors
+=======
+// output_test - spin each motor for a moment to allow the user to confirm the motor order and spin direction
+>>>>>>> upstream/master
 void AP_MotorsSingle::output_test()
 {
     // Send minimum values to all motors
     output_min();
 
+<<<<<<< HEAD
     hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_7], _rc_throttle->radio_min);
     hal.scheduler->delay(4000);
     hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_7], _rc_throttle->radio_min + _min_throttle);
@@ -249,4 +260,46 @@ void AP_MotorsSingle::output_test()
 	hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_2], _servo2->radio_max);
 	hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_3], _servo3->radio_max);
 	hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_4], _servo4->radio_max);
+=======
+    // spin main motor
+    hal.scheduler->delay(1000);
+    hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_7], _rc_throttle->radio_min + _min_throttle);
+    hal.scheduler->delay(1000);
+    hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_7], _rc_throttle->radio_min);
+    hal.scheduler->delay(2000);   
+
+    // flap servo 1
+    hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_1], _servo1->radio_min);
+    hal.scheduler->delay(1000);
+    hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_1], _servo1->radio_max);
+    hal.scheduler->delay(1000);
+    hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_1], _servo1->radio_trim);
+    hal.scheduler->delay(2000);
+
+    // flap servo 2
+    hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_2], _servo2->radio_min);
+    hal.scheduler->delay(1000);
+    hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_2], _servo2->radio_max);
+    hal.scheduler->delay(1000);
+    hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_2], _servo2->radio_trim);
+    hal.scheduler->delay(2000);
+
+    // flap servo 3
+	hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_3], _servo3->radio_min);
+    hal.scheduler->delay(1000);
+    hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_3], _servo3->radio_max);
+    hal.scheduler->delay(1000);
+    hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_3], _servo3->radio_trim);
+    hal.scheduler->delay(2000);
+
+    // flap servo 4
+	hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_4], _servo4->radio_min);
+    hal.scheduler->delay(1000);
+    hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_4], _servo4->radio_max);
+    hal.scheduler->delay(1000);
+    hal.rcout->write(_motor_to_channel_map[AP_MOTORS_MOT_4], _servo4->radio_trim);
+
+    // Send minimum values to all motors
+    output_min();
+>>>>>>> upstream/master
 }

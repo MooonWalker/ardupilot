@@ -51,6 +51,8 @@ print_log_menu(void)
         PLOG(COMPASS);
         PLOG(TECS);
         PLOG(CAMERA);
+        PLOG(RC);
+        PLOG(SONAR);
  #undef PLOG
     }
 
@@ -142,6 +144,8 @@ select_logs(uint8_t argc, const Menu::arg *argv)
         TARG(COMPASS);
         TARG(TECS);
         TARG(CAMERA);
+        TARG(RC);
+        TARG(SONAR);
  #undef TARG
     }
 
@@ -387,6 +391,31 @@ static void Log_Write_Mode(uint8_t mode)
     DataFlash.WriteBlock(&pkt, sizeof(pkt));
 }
 
+struct PACKED log_Sonar {
+    LOG_PACKET_HEADER;
+    uint32_t timestamp;
+    float distance;
+    float voltage;
+    float baro_alt;
+    float groundspeed;
+    uint8_t throttle;
+};
+
+// Write a sonar packet
+static void Log_Write_Sonar()
+{
+    struct log_Sonar pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_SONAR_MSG),
+        timestamp   : hal.scheduler->millis(),
+        distance    : sonar.distance_cm(),
+        voltage     : sonar.voltage(),
+        baro_alt    : barometer.get_altitude(),
+        groundspeed : (0.01f * g_gps->ground_speed_cm),
+        throttle    : (uint8_t)(100 * channel_throttle->norm_output())
+    };
+    DataFlash.WriteBlock(&pkt, sizeof(pkt));
+}
+
 struct PACKED log_Current {
     LOG_PACKET_HEADER;
     uint32_t time_ms;
@@ -395,6 +424,13 @@ struct PACKED log_Current {
     int16_t current_amps;
     uint16_t board_voltage;
     float   current_total;
+};
+
+struct PACKED log_Arm_Disarm {
+    LOG_PACKET_HEADER;
+    uint32_t time_ms;
+    uint8_t  arm_state;
+    uint16_t arm_checks;
 };
 
 static void Log_Write_Current()
@@ -411,6 +447,15 @@ static void Log_Write_Current()
     DataFlash.WriteBlock(&pkt, sizeof(pkt));
 }
 
+static void Log_Arm_Disarm() {
+    struct log_Arm_Disarm pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_ARM_DISARM_MSG),
+        time_ms                 : hal.scheduler->millis(),
+        arm_state               : arming.is_armed(),
+        arm_checks              : arming.get_enabled_checks()      
+    };
+    DataFlash.WriteBlock(&pkt, sizeof(pkt));
+}
 
 struct PACKED log_Compass {
     LOG_PACKET_HEADER;
@@ -426,6 +471,7 @@ struct PACKED log_Compass {
 // Write a Compass packet. Total length : 15 bytes
 static void Log_Write_Compass()
 {
+<<<<<<< HEAD
     Vector3f mag_offsets = compass.get_offsets();
     struct log_Compass pkt = {
         LOG_PACKET_HEADER_INIT(LOG_COMPASS_MSG),
@@ -433,11 +479,38 @@ static void Log_Write_Compass()
         mag_x           : compass.mag_x,
         mag_y           : compass.mag_y,
         mag_z           : compass.mag_z,
+=======
+    const Vector3f &mag_offsets = compass.get_offsets();
+    const Vector3f &mag = compass.get_field();
+    struct log_Compass pkt = {
+        LOG_PACKET_HEADER_INIT(LOG_COMPASS_MSG),
+        time_ms         : hal.scheduler->millis(),
+        mag_x           : (int16_t)mag.x,
+        mag_y           : (int16_t)mag.y,
+        mag_z           : (int16_t)mag.z,
+>>>>>>> upstream/master
         offset_x        : (int16_t)mag_offsets.x,
         offset_y        : (int16_t)mag_offsets.y,
         offset_z        : (int16_t)mag_offsets.z
     };
     DataFlash.WriteBlock(&pkt, sizeof(pkt));
+#if COMPASS_MAX_INSTANCES > 1
+    if (compass.get_count() > 1) {
+        const Vector3f &mag2_offsets = compass.get_offsets(1);
+        const Vector3f &mag2 = compass.get_field(1);
+        struct log_Compass pkt2 = {
+            LOG_PACKET_HEADER_INIT(LOG_COMPASS2_MSG),
+            time_ms         : hal.scheduler->millis(),
+            mag_x           : (int16_t)mag2.x,
+            mag_y           : (int16_t)mag2.y,
+            mag_z           : (int16_t)mag2.z,
+            offset_x        : (int16_t)mag2_offsets.x,
+            offset_y        : (int16_t)mag2_offsets.y,
+            offset_z        : (int16_t)mag2_offsets.z
+        };
+        DataFlash.WriteBlock(&pkt2, sizeof(pkt2));
+    }
+#endif
 }
 
 static void Log_Write_GPS(void)
@@ -448,6 +521,15 @@ static void Log_Write_GPS(void)
 static void Log_Write_IMU() 
 {
     DataFlash.Log_Write_IMU(ins);
+<<<<<<< HEAD
+=======
+}
+
+static void Log_Write_RC(void)
+{
+    DataFlash.Log_Write_RCIN();
+    DataFlash.Log_Write_RCOUT();
+>>>>>>> upstream/master
 }
 
 static const struct LogStructure log_structure[] PROGMEM = {
@@ -466,12 +548,24 @@ static const struct LogStructure log_structure[] PROGMEM = {
       "CTUN", "Icccchhf",    "TimeMS,NavRoll,Roll,NavPitch,Pitch,ThrOut,RdrOut,AccY" },
     { LOG_NTUN_MSG, sizeof(log_Nav_Tuning),         
       "NTUN", "ICICCccfI",   "TimeMS,Yaw,WpDist,TargBrg,NavBrg,AltErr,Arspd,Alt,GSpdCM" },
+<<<<<<< HEAD
+=======
+    { LOG_SONAR_MSG, sizeof(log_Sonar),             
+      "SONR", "IffffB",   "TimeMS,DistCM,Volt,BaroAlt,GSpd,Thr" },
+>>>>>>> upstream/master
     { LOG_MODE_MSG, sizeof(log_Mode),             
       "MODE", "IMB",         "TimeMS,Mode,ModeNum" },
     { LOG_CURRENT_MSG, sizeof(log_Current),             
       "CURR", "IhhhHf",      "TimeMS,Thr,Volt,Curr,Vcc,CurrTot" },
     { LOG_COMPASS_MSG, sizeof(log_Compass),             
       "MAG", "Ihhhhhh",   "TimeMS,MagX,MagY,MagZ,OfsX,OfsY,OfsZ" },
+<<<<<<< HEAD
+=======
+    { LOG_COMPASS2_MSG, sizeof(log_Compass),             
+      "MAG2", "Ihhhhhh",   "TimeMS,MagX,MagY,MagZ,OfsX,OfsY,OfsZ" },
+    { LOG_ARM_DISARM_MSG, sizeof(log_Arm_Disarm),
+      "ARM", "IHB", "TimeMS,ArmState,ArmChecks" },
+>>>>>>> upstream/master
     TECS_LOG_FORMAT(LOG_TECS_MSG),
 };
 
@@ -480,13 +574,11 @@ static void Log_Read(uint16_t log_num, int16_t start_page, int16_t end_page)
 {
     cliSerial->printf_P(PSTR("\n" FIRMWARE_STRING
                              "\nFree RAM: %u\n"),
-                        (unsigned) memcheck_available_memory());
+                        (unsigned)hal.util->available_memory());
 
     cliSerial->println_P(PSTR(HAL_BOARD_NAME));
 
 	DataFlash.LogReadProcess(log_num, start_page, end_page, 
-                             sizeof(log_structure)/sizeof(log_structure[0]),
-                             log_structure, 
                              print_flight_mode,
                              cliSerial);
 }
@@ -494,8 +586,19 @@ static void Log_Read(uint16_t log_num, int16_t start_page, int16_t end_page)
 // start a new log
 static void start_logging() 
 {
+<<<<<<< HEAD
     DataFlash.StartNewLog(sizeof(log_structure)/sizeof(log_structure[0]), log_structure);
     DataFlash.Log_Write_Message_P(PSTR(FIRMWARE_STRING));
+=======
+    DataFlash.StartNewLog();
+    DataFlash.Log_Write_Message_P(PSTR(FIRMWARE_STRING));
+
+    // write system identifier as well if available
+    char sysid[40];
+    if (hal.util->get_system_id(sysid)) {
+        DataFlash.Log_Write_Message(sysid);
+    }
+>>>>>>> upstream/master
 }
 
 #else // LOGGING_ENABLED
@@ -514,6 +617,7 @@ static void Log_Write_Mode(uint8_t mode) {}
 static void Log_Write_Compass() {}
 static void Log_Write_GPS() {}
 static void Log_Write_IMU() {}
+static void Log_Write_RC() {}
 
 static int8_t process_logs(uint8_t argc, const Menu::arg *argv) {
     return 0;

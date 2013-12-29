@@ -16,7 +16,7 @@ class DataFlash_Class
 {
 public:
     // initialisation
-    virtual void Init(void) = 0;
+    virtual void Init(const struct LogStructure *structure, uint8_t num_types);
     virtual bool CardInserted(void) = 0;
 
     // erase handling
@@ -29,11 +29,11 @@ public:
     // high level interface
     virtual uint16_t find_last_log(void) = 0;
     virtual void get_log_boundaries(uint16_t log_num, uint16_t & start_page, uint16_t & end_page) = 0;
+    virtual void get_log_info(uint16_t log_num, uint32_t &size, uint32_t &time_utc) = 0;
+    virtual int16_t get_log_data(uint16_t log_num, uint16_t page, uint32_t offset, uint16_t len, uint8_t *data) = 0;
     virtual uint16_t get_num_logs(void) = 0;
     virtual void LogReadProcess(uint16_t log_num,
                                 uint16_t start_page, uint16_t end_page, 
-                                uint8_t num_types,
-                                const struct LogStructure *structure,
                                 void (*printMode)(AP_HAL::BetterStream *port, uint8_t mode),
                                 AP_HAL::BetterStream *port) = 0;
     virtual void DumpPageInfo(AP_HAL::BetterStream *port) = 0;
@@ -41,12 +41,16 @@ public:
     virtual void ListAvailableLogs(AP_HAL::BetterStream *port) = 0;
 
     /* logging methods common to all vehicles */
-    uint16_t StartNewLog(uint8_t num_types,
-                         const struct LogStructure *structure);
+    uint16_t StartNewLog(void);
     void Log_Write_Format(const struct LogStructure *structure);
     void Log_Write_Parameter(const char *name, float value);
     void Log_Write_GPS(const GPS *gps, int32_t relative_alt);
     void Log_Write_IMU(const AP_InertialSensor &ins);
+<<<<<<< HEAD
+=======
+    void Log_Write_RCIN(void);
+    void Log_Write_RCOUT(void);
+>>>>>>> upstream/master
     void Log_Write_Message(const char *message);
     void Log_Write_Message_P(const prog_char_t *message);
 
@@ -62,15 +66,17 @@ protected:
     read and print a log entry using the format strings from the given structure
     */
     void _print_log_entry(uint8_t msg_type, 
-                          uint8_t num_types, 
-                          const struct LogStructure *structure,
                           void (*print_mode)(AP_HAL::BetterStream *port, uint8_t mode),
                           AP_HAL::BetterStream *port);
     
+    void Log_Fill_Format(const struct LogStructure *structure, struct log_Format &pkt);
     void Log_Write_Parameter(const AP_Param *ap, const AP_Param::ParamToken &token, 
                              enum ap_var_type type);
     void Log_Write_Parameters(void);
     virtual uint16_t start_new_log(void) = 0;
+
+    const struct LogStructure *_structures;
+    uint8_t _num_types;
 
     /*
       read a block
@@ -167,6 +173,32 @@ struct PACKED log_IMU {
     float accel_x, accel_y, accel_z;
 };
 
+struct PACKED log_RCIN {
+    LOG_PACKET_HEADER;
+    uint32_t timestamp;
+    uint16_t chan1;
+    uint16_t chan2;
+    uint16_t chan3;
+    uint16_t chan4;
+    uint16_t chan5;
+    uint16_t chan6;
+    uint16_t chan7;
+    uint16_t chan8;
+};
+
+struct PACKED log_RCOUT {
+    LOG_PACKET_HEADER;
+    uint32_t timestamp;
+    uint16_t chan1;
+    uint16_t chan2;
+    uint16_t chan3;
+    uint16_t chan4;
+    uint16_t chan5;
+    uint16_t chan6;
+    uint16_t chan7;
+    uint16_t chan8;
+};
+
 #define LOG_COMMON_STRUCTURES \
     { LOG_FORMAT_MSG, sizeof(log_Format), \
       "FMT", "BBnNZ",      "Type,Length,Name,Format" },    \
@@ -176,8 +208,17 @@ struct PACKED log_IMU {
       "GPS",  "BIHBcLLeeEefI", "Status,TimeMS,Week,NSats,HDop,Lat,Lng,RelAlt,Alt,Spd,GCrs,VZ,T" }, \
     { LOG_IMU_MSG, sizeof(log_IMU), \
       "IMU",  "Iffffff",     "TimeMS,GyrX,GyrY,GyrZ,AccX,AccY,AccZ" }, \
+<<<<<<< HEAD
+=======
+    { LOG_IMU2_MSG, sizeof(log_IMU), \
+      "IMU2",  "Iffffff",     "TimeMS,GyrX,GyrY,GyrZ,AccX,AccY,AccZ" }, \
+>>>>>>> upstream/master
     { LOG_MESSAGE_MSG, sizeof(log_Message), \
-      "MSG",  "Z",     "Message" }
+      "MSG",  "Z",     "Message"}, \
+    { LOG_RCIN_MSG, sizeof(log_RCIN), \
+      "RCIN",  "Ihhhhhhhh",     "TimeMS,Chan1,Chan2,Chan3,Chan4,Chan5,Chan6,Chan7,Chan8" }, \
+    { LOG_RCOUT_MSG, sizeof(log_RCOUT), \
+      "RCOU",  "Ihhhhhhhh",     "TimeMS,Chan1,Chan2,Chan3,Chan4,Chan5,Chan6,Chan7,Chan8" }
 
 // message types for common messages
 #define LOG_FORMAT_MSG	  128
@@ -185,6 +226,9 @@ struct PACKED log_IMU {
 #define LOG_GPS_MSG		  130
 #define LOG_IMU_MSG		  131
 #define LOG_MESSAGE_MSG	  132
+#define LOG_RCIN_MSG      133
+#define LOG_RCOUT_MSG     134
+#define LOG_IMU2_MSG	  135
 
 #include "DataFlash_Block.h"
 #include "DataFlash_File.h"

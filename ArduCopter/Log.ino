@@ -40,10 +40,11 @@ print_log_menu(void)
         if (g.log_bitmask & MASK_LOG_PM) cliSerial->printf_P(PSTR(" PM"));
         if (g.log_bitmask & MASK_LOG_CTUN) cliSerial->printf_P(PSTR(" CTUN"));
         if (g.log_bitmask & MASK_LOG_NTUN) cliSerial->printf_P(PSTR(" NTUN"));
+        if (g.log_bitmask & MASK_LOG_RCIN) cliSerial->printf_P(PSTR(" RCIN"));
         if (g.log_bitmask & MASK_LOG_IMU) cliSerial->printf_P(PSTR(" IMU"));
         if (g.log_bitmask & MASK_LOG_CMD) cliSerial->printf_P(PSTR(" CMD"));
         if (g.log_bitmask & MASK_LOG_CURRENT) cliSerial->printf_P(PSTR(" CURRENT"));
-        if (g.log_bitmask & MASK_LOG_MOTORS) cliSerial->printf_P(PSTR(" MOTORS"));
+        if (g.log_bitmask & MASK_LOG_RCOUT) cliSerial->printf_P(PSTR(" RCOUT"));
         if (g.log_bitmask & MASK_LOG_OPTFLOW) cliSerial->printf_P(PSTR(" OPTFLOW"));
         if (g.log_bitmask & MASK_LOG_PID) cliSerial->printf_P(PSTR(" PID"));
         if (g.log_bitmask & MASK_LOG_COMPASS) cliSerial->printf_P(PSTR(" COMPASS"));
@@ -131,11 +132,11 @@ select_logs(uint8_t argc, const Menu::arg *argv)
         TARG(PM);
         TARG(CTUN);
         TARG(NTUN);
-        TARG(MODE);
+        TARG(RCIN);
         TARG(IMU);
         TARG(CMD);
         TARG(CURRENT);
-        TARG(MOTORS);
+        TARG(RCOUT);
         TARG(OPTFLOW);
         TARG(PID);
         TARG(COMPASS);
@@ -231,6 +232,7 @@ static void Log_Write_Current()
     DataFlash.WriteBlock(&pkt, sizeof(pkt));
 }
 
+<<<<<<< HEAD:ArduCopter/Log.ino
 struct PACKED log_Motors {
     LOG_PACKET_HEADER;
 #if FRAME_CONFIG == OCTA_FRAME || FRAME_CONFIG == OCTA_QUAD_FRAME
@@ -287,6 +289,8 @@ static void Log_Write_Motors()
     DataFlash.WriteBlock(&pkt, sizeof(pkt));
 }
 
+=======
+>>>>>>> upstream/master:ArduCopter/Log.pde
 struct PACKED log_Optflow {
     LOG_PACKET_HEADER;
     int16_t dx;
@@ -406,13 +410,14 @@ struct PACKED log_Compass {
 // Write a Compass packet
 static void Log_Write_Compass()
 {
-    Vector3f mag_offsets = compass.get_offsets();
-    Vector3f mag_motor_offsets = compass.get_motor_offsets();
+    const Vector3f &mag_offsets = compass.get_offsets(0);
+    const Vector3f &mag_motor_offsets = compass.get_motor_offsets(0);
+    const Vector3f &mag = compass.get_field(0);
     struct log_Compass pkt = {
         LOG_PACKET_HEADER_INIT(LOG_COMPASS_MSG),
-        mag_x           : compass.mag_x,
-        mag_y           : compass.mag_y,
-        mag_z           : compass.mag_z,
+        mag_x           : (int16_t)mag.x,
+        mag_y           : (int16_t)mag.y,
+        mag_z           : (int16_t)mag.z,
         offset_x        : (int16_t)mag_offsets.x,
         offset_y        : (int16_t)mag_offsets.y,
         offset_z        : (int16_t)mag_offsets.z,
@@ -421,6 +426,26 @@ static void Log_Write_Compass()
         motor_offset_z  : (int16_t)mag_motor_offsets.z
     };
     DataFlash.WriteBlock(&pkt, sizeof(pkt));
+#if COMPASS_MAX_INSTANCES > 1
+    if (compass.get_count() > 1) {
+        const Vector3f &mag2_offsets = compass.get_offsets(1);
+        const Vector3f &mag2_motor_offsets = compass.get_motor_offsets(1);
+        const Vector3f &mag2 = compass.get_field(1);
+        struct log_Compass pkt2 = {
+            LOG_PACKET_HEADER_INIT(LOG_COMPASS2_MSG),
+            mag_x           : (int16_t)mag2.x,
+            mag_y           : (int16_t)mag2.y,
+            mag_z           : (int16_t)mag2.z,
+            offset_x        : (int16_t)mag2_offsets.x,
+            offset_y        : (int16_t)mag2_offsets.y,
+            offset_z        : (int16_t)mag2_offsets.z,
+            motor_offset_x  : (int16_t)mag2_motor_offsets.x,
+            motor_offset_y  : (int16_t)mag2_motor_offsets.y,
+            motor_offset_z  : (int16_t)mag2_motor_offsets.z
+        };
+        DataFlash.WriteBlock(&pkt2, sizeof(pkt2));
+    }
+#endif
 }
 
 struct PACKED log_Performance {
@@ -485,13 +510,12 @@ static void Log_Write_Cmd(uint8_t num, const struct Location *wp)
 
 struct PACKED log_Attitude {
     LOG_PACKET_HEADER;
-    int16_t roll_in;
+    int16_t control_roll;
     int16_t roll;
-    int16_t pitch_in;
+    int16_t control_pitch;
     int16_t pitch;
-    int16_t yaw_in;
+    uint16_t control_yaw;
     uint16_t yaw;
-    uint16_t nav_yaw;
 };
 
 // Write an attitude packet
@@ -499,13 +523,12 @@ static void Log_Write_Attitude()
 {
     struct log_Attitude pkt = {
         LOG_PACKET_HEADER_INIT(LOG_ATTITUDE_MSG),
-        roll_in     : (int16_t)control_roll,
-        roll        : (int16_t)ahrs.roll_sensor,
-        pitch_in    : (int16_t)control_pitch,
-        pitch       : (int16_t)ahrs.pitch_sensor,
-        yaw_in      : (int16_t)g.rc_4.control_in,
-        yaw         : (uint16_t)ahrs.yaw_sensor,
-        nav_yaw     : (uint16_t)nav_yaw
+        control_roll    : (int16_t)control_roll,
+        roll            : (int16_t)ahrs.roll_sensor,
+        control_pitch   : (int16_t)control_pitch,
+        pitch           : (int16_t)ahrs.pitch_sensor,
+        control_yaw     : (uint16_t)control_yaw,
+        yaw             : (uint16_t)ahrs.yaw_sensor
     };
     DataFlash.WriteBlock(&pkt, sizeof(pkt));
 }
@@ -772,6 +795,7 @@ static const struct LogStructure log_structure[] PROGMEM = {
 #endif
     { LOG_CURRENT_MSG, sizeof(log_Current),             
       "CURR", "hIhhhf",      "ThrOut,ThrInt,Volt,Curr,Vcc,CurrTot" },
+<<<<<<< HEAD:ArduCopter/Log.ino
 
 #if FRAME_CONFIG == OCTA_FRAME || FRAME_CONFIG == OCTA_QUAD_FRAME
     { LOG_MOTORS_MSG, sizeof(log_Motors),       
@@ -787,6 +811,8 @@ static const struct LogStructure log_structure[] PROGMEM = {
       "MOT",  "hhhh",        "Mot1,Mot2,Mot3,Mot4" },
 #endif
 
+=======
+>>>>>>> upstream/master:ArduCopter/Log.pde
     { LOG_OPTFLOW_MSG, sizeof(log_Optflow),       
       "OF",   "hhBccffee",   "Dx,Dy,SQual,X,Y,Lat,Lng,Roll,Pitch" },
     { LOG_NAV_TUNING_MSG, sizeof(log_Nav_Tuning),       
@@ -795,12 +821,14 @@ static const struct LogStructure log_structure[] PROGMEM = {
       "CTUN", "hcefchhhh",   "ThrIn,SonAlt,BarAlt,WPAlt,DesSonAlt,AngBst,CRate,ThrOut,DCRate" },
     { LOG_COMPASS_MSG, sizeof(log_Compass),             
       "MAG", "hhhhhhhhh",    "MagX,MagY,MagZ,OfsX,OfsY,OfsZ,MOfsX,MOfsY,MOfsZ" },
+    { LOG_COMPASS2_MSG, sizeof(log_Compass),             
+      "MAG2", "hhhhhhhhh",    "MagX,MagY,MagZ,OfsX,OfsY,OfsZ,MOfsX,MOfsY,MOfsZ" },
     { LOG_PERFORMANCE_MSG, sizeof(log_Performance), 
       "PM",  "BBHHIhBHB",    "RenCnt,RenBlw,NLon,NLoop,MaxT,PMT,I2CErr,INSErr,INAVErr" },
     { LOG_CMD_MSG, sizeof(log_Cmd),                 
       "CMD", "BBBBBeLL",     "CTot,CNum,CId,COpt,Prm1,Alt,Lat,Lng" },
     { LOG_ATTITUDE_MSG, sizeof(log_Attitude),       
-      "ATT", "cccccCC",      "RollIn,Roll,PitchIn,Pitch,YawIn,Yaw,NavYaw" },
+      "ATT", "ccccCC",       "DesRoll,Roll,DesPitch,Pitch,DesYaw,Yaw" },
     { LOG_INAV_MSG, sizeof(log_INAV),       
       "INAV", "cccfffiiff",  "BAlt,IAlt,IClb,ACorrX,ACorrY,ACorrZ,GLat,GLng,ILat,ILng" },
     { LOG_MODE_MSG, sizeof(log_Mode),
@@ -836,13 +864,11 @@ static void Log_Read(uint16_t log_num, uint16_t start_page, uint16_t end_page)
 
     cliSerial->printf_P(PSTR("\n" FIRMWARE_STRING
                              "\nFree RAM: %u\n"),
-                        (unsigned) memcheck_available_memory());
+                        (unsigned) hal.util->available_memory());
 
     cliSerial->println_P(PSTR(HAL_BOARD_NAME));
 
 	DataFlash.LogReadProcess(log_num, start_page, end_page, 
-                             sizeof(log_structure)/sizeof(log_structure[0]),
-                             log_structure, 
                              print_flight_mode,
                              cliSerial);
 }
@@ -852,9 +878,21 @@ static void start_logging()
 {
     if (g.log_bitmask != 0 && !ap.logging_started) {
         ap.logging_started = true;
+<<<<<<< HEAD:ArduCopter/Log.ino
         DataFlash.StartNewLog(sizeof(log_structure)/sizeof(log_structure[0]), log_structure);
         DataFlash.Log_Write_Message_P(PSTR(FIRMWARE_STRING));
 
+=======
+        DataFlash.StartNewLog();
+        DataFlash.Log_Write_Message_P(PSTR(FIRMWARE_STRING));
+
+        // write system identifier as well if available
+        char sysid[40];
+        if (hal.util->get_system_id(sysid)) {
+            DataFlash.Log_Write_Message(sysid);
+        }
+
+>>>>>>> upstream/master:ArduCopter/Log.pde
         // log the flight mode
         Log_Write_Mode(control_mode);
     }
@@ -884,7 +922,6 @@ static void Log_Write_Event(uint8_t id){}
 static void Log_Write_Optflow() {}
 static void Log_Write_Nav_Tuning() {}
 static void Log_Write_Control_Tuning() {}
-static void Log_Write_Motors() {}
 static void Log_Write_Performance() {}
 static void Log_Write_PID(uint8_t pid_id, int32_t error, int32_t p, int32_t i, int32_t d, int32_t output, float gain) {}
 static void Log_Write_Camera() {}

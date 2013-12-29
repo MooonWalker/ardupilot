@@ -107,6 +107,7 @@ static void init_aux_switches()
         case AUX_SWITCH_RESETTOARMEDYAW:
         case AUX_SWITCH_SUPERSIMPLE_MODE:
         case AUX_SWITCH_ACRO_TRAINER:
+        case AUX_SWITCH_EPM:
         case AUX_SWITCH_SPRAYER:
             do_aux_switch_function(g.ch7_option, ap.CH7_flag);
             break;
@@ -119,6 +120,7 @@ static void init_aux_switches()
         case AUX_SWITCH_RESETTOARMEDYAW:
         case AUX_SWITCH_SUPERSIMPLE_MODE:
         case AUX_SWITCH_ACRO_TRAINER:
+        case AUX_SWITCH_EPM:
         case AUX_SWITCH_SPRAYER:
             do_aux_switch_function(g.ch8_option, ap.CH8_flag);
             break;
@@ -239,12 +241,15 @@ static void do_aux_switch_function(int8_t ch_function, uint8_t ch_flag)
 
                 // save command
                 set_cmd_with_index(new_wp, aux_switch_wp_index);
+<<<<<<< HEAD:ArduCopter/control_modes.ino
 
                 // log event
                 Log_Write_Event(DATA_SAVEWP_ADD_WP);
+=======
+>>>>>>> upstream/master:ArduCopter/control_modes.pde
 
-                // Cause the CopterLEDs to blink twice to indicate saved waypoint
-                copter_leds_nav_blink = 10;
+                // log event
+                Log_Write_Event(DATA_SAVEWP_ADD_WP);
             }
             break;
 
@@ -301,7 +306,24 @@ static void do_aux_switch_function(int8_t ch_function, uint8_t ch_flag)
                     break;
             }
             break;
-
+#if EPM_ENABLED == ENABLED
+        case AUX_SWITCH_EPM:
+            switch(ch_flag) {
+                case AUX_SWITCH_LOW:
+                    epm.off();
+                    Log_Write_Event(DATA_EPM_OFF);
+                    break;
+                case AUX_SWITCH_MIDDLE:
+                    epm.neutral();
+                    Log_Write_Event(DATA_EPM_NEUTRAL);
+                    break;
+                case AUX_SWITCH_HIGH:
+                    epm.on();
+                    Log_Write_Event(DATA_EPM_ON);
+                    break;
+            }
+            break;
+#endif
 #if SPRAYER == ENABLED
         case AUX_SWITCH_SPRAYER:
             sprayer.enable(ch_flag == AUX_SWITCH_HIGH);

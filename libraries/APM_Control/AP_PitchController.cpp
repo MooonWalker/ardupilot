@@ -218,7 +218,11 @@ float AP_PitchController::_get_coordination_rate_offset(float &aspeed, bool &inv
         // don't do turn coordination handling when at very high pitch angles
         rate_offset = 0;
     } else {
+<<<<<<< HEAD
         rate_offset = cosf(_ahrs.pitch)*fabsf(ToDeg((GRAVITY_MSS / max(aspeed , float(aparm.airspeed_min))) * tanf(bank_angle) * sinf(bank_angle))) * _roll_ff;
+=======
+        rate_offset = cosf(_ahrs.pitch)*fabsf(ToDeg((GRAVITY_MSS / max((aspeed * _ahrs.get_EAS2TAS()) , float(aparm.airspeed_min))) * tanf(bank_angle) * sinf(bank_angle))) * _roll_ff;
+>>>>>>> upstream/master
     }
 	if (inverted) {
 		rate_offset = -rate_offset;
